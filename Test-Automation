@@ -1,0 +1,79 @@
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using NUnit.Framework;
+
+namespace TestProject_Tester
+{
+    public class Tests
+    {
+        IWebDriver driver;
+
+        [SetUp]
+        public void Setup()
+        {
+            driver = new ChromeDriver();
+            driver.Manage().Window.Maximize();
+        }
+
+        [Test]
+        public void TestSearchMovie()
+        {
+            driver.Navigate().GoToUrl("https://www.themoviedb.org/");
+
+            var searchBox = driver.FindElement(By.Id("inner_search_v4"));
+
+            searchBox.SendKeys("Avatar");
+            searchBox.SendKeys(Keys.Enter);
+
+            System.Threading.Thread.Sleep(2000);
+
+            Assert.That(driver.PageSource.Contains("Avatar"), Is.True);
+        }
+
+        [Test]
+        public void TestSearchEmptyInput()
+        {
+            driver.Navigate().GoToUrl("https://www.themoviedb.org/");
+            System.Threading.Thread.Sleep(3000); 
+
+            var searchBox = driver.FindElement(By.Id("inner_search_v4"));
+
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            js.ExecuteScript("arguments[0].focus();", searchBox);
+            searchBox.SendKeys(Keys.Enter);
+
+            System.Threading.Thread.Sleep(3000);
+
+            bool isNoResultsVisible = driver.PageSource.Contains("There are no movies") ||
+                                     driver.Url.Contains("/search");
+
+            Assert.That(isNoResultsVisible, Is.True);
+        }
+
+        [Test]
+        public void TestLanguageToggle()
+        {
+            driver.Navigate().GoToUrl("https://www.themoviedb.org/");
+            System.Threading.Thread.Sleep(3000);
+
+            var langButton = driver.FindElement(By.XPath("//li[contains(@class, 'translate')]//div | //div[text()='vi'] | //div[contains(@class, 'language')]"));
+
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            js.ExecuteScript("arguments[0].click();", langButton);
+
+            System.Threading.Thread.Sleep(2000);
+
+            var langPanel = driver.FindElement(By.XPath("//h2[contains(text(), 'Language') or contains(text(), 'ngôn ngữ')]"));
+
+            Assert.That(langPanel.Displayed, Is.True);
+        }
+
+
+        [TearDown]
+        public void CloseBrowser()
+        {
+            driver.Quit();
+            driver.Dispose();
+        }
+    }
+}
